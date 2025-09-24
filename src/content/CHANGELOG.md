@@ -31,6 +31,49 @@
 - Error boundaries provide user-friendly error recovery
 - CI now uses `npm ci` for deterministic builds
 
+## v1.3.0 - Forecast Demo Integration
+
+### Added
+- **Forecast Demo Card**: Interactive forecast simulation directly on the dashboard
+- **Event Integration**: Emits `ForecastRunStarted` and `ForecastRunCompleted` events via in-process events bus
+- **Real-Time Feedback**: Success/error messages and loading states for forecast operations
+- **Audit Integration**: Automatically refreshes Recent Audit table after forecast completion
+
+### Technical Details
+- Created `/api/forecast-demo` endpoint with configurable delay and parameters
+- Forecast demo simulates 1-second processing with 7-day horizon and 5 items
+- Events are automatically audited and visible in console (development mode)
+- Dashboard now includes three functional widgets: Quick Approvals, Forecast Demo, and Recent Audit
+- No schema or navigation changes - purely UI and event integration enhancements
+
+## v1.2.1 - Hotfix: UUID & Hydration Stability
+
+### Fixed
+- **Safe UUID Generation**: Replaced direct `crypto.randomUUID()` calls with cross-browser compatible helper
+- **Hydration Stability**: Added `suppressHydrationWarning` to body element to prevent SSR/CSR mismatches
+- **Browser Compatibility**: UUID generation now works across all browser versions with fallback strategies
+
+### Technical Details
+- Created `src/lib/safe-id.ts` with progressive fallback: crypto.randomUUID() → crypto.getRandomValues() → timestamp-based
+- Updated all API calls in dashboard and approval components to use safe UUID generation
+- Layout hydration warnings suppressed to prevent development overlay errors from browser extensions
+- No functional changes - purely stability and compatibility improvements
+
+## v1.2.0 - Dashboard Widgets
+
+### Added
+- **Quick Approvals Widget**: Interactive approval management directly on the dashboard
+- **Recent Audit Widget**: Live audit data display with refresh functionality
+- **Role-Based UI**: Approve/Deny buttons visible only to ADMIN/FM roles
+- **Real-Time Feedback**: Success/error messages and loading states for all operations
+
+### Technical Details
+- Dashboard now serves as the main landing page with functional widgets
+- Quick Approvals widget includes input field and role-aware action buttons
+- Recent Audit widget displays latest 10 entries with refresh capability
+- All widgets use existing APIs with proper error handling and observability headers
+- No schema or navigation changes - purely UI enhancements
+
 ## v1.1.0 - Approval Auto-Timeouts
 
 ### Added

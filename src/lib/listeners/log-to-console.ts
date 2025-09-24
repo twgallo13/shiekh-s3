@@ -14,4 +14,6 @@ if (process.env.NODE_ENV !== "production") {
   on("ApprovalRequested",       (p) => log("ApprovalRequested", p));
   on("ApprovalGranted",         (p) => log("ApprovalGranted", p));
   on("ApprovalDenied",          (p) => log("ApprovalDenied", p));
+  on("ForecastRunStarted",      (p) => log("ForecastRunStarted", p));
+  on("ForecastRunCompleted",    (p) => log("ForecastRunCompleted", p));
 }

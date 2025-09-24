@@ -1,5 +1,7 @@
 "use client";
 
+import { safeId } from "@/lib/safe-id";
+
 type Props = {
   targetId: string;
   role?: "ADMIN" | "FM" | "WHS" | "DM" | "SM" | "AM" | "ANON";
@@ -10,9 +12,8 @@ async function post(action: "grant" | "deny" | "request", payload: Record<string
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      // These two are echoed back by the API when set, useful for tracing
-      "X-Trace-Id": crypto.randomUUID(),
-      "Idempotency-Key": crypto.randomUUID(),
+      "X-Trace-Id": safeId(),
+      "Idempotency-Key": safeId(),
     },
     body: JSON.stringify({ action, ...payload }),
   });
