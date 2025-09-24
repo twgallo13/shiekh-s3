@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.7.0 - Domain Events & Approval Hooks
+
+### Added
+- **Domain Events Bus**: Lightweight in-process event system with auditable events
+- **Approval API**: `/api/approvals` endpoint with RBAC for approval workflows
+- **Event Emitters**: Forecast and approval event emitters for business logic integration
+- **Console Logging**: Development-only event logging for debugging
+- **Event Types**: ForecastRunStarted, ReplenishmentDraftCreated, ForecastRunCompleted, ApprovalRequested, ApprovalGranted, ApprovalDenied
+
+### Technical Details
+- All events are automatically audited via existing audit system
+- Event listeners are safe - failures don't break the main flow
+- Approval API enforces role-based access control (ADMIN/FM for grant/deny)
+- No database schema changes - events are audited only
+- Console logging only active in development environment
+
 ## v0.6.0 - Stability & Monitoring
 
 ### Added

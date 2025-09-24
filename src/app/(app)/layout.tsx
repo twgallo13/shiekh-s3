@@ -2,6 +2,7 @@ import { VersionBadge } from '@/components/VersionBadge';
 import { SafeLink } from '@/components/SafeLink';
 import { loadStructure } from '@/lib/structure';
 import { Role } from '@/lib/guards';
+import '../../lib/listeners/log-to-console';
 
 export default async function AppLayout({
   children,
