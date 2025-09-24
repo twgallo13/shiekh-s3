@@ -1,101 +1,118 @@
-import { VersionBadge } from '@/components/VersionBadge';
-
-export default function ChangelogPage() {
+export default async function ChangelogPage() {
+  const html = await renderChangelog();
   return (
-    <div className="px-4 py-6 sm:px-0">
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white overflow-hidden shadow rounded-lg">
-          <div className="px-4 py-5 sm:p-6">
-            <div className="flex items-center justify-between mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">
-                Changelog
-              </h1>
-              <VersionBadge />
-            </div>
-
-            <div className="space-y-6">
-              <div className="border-l-4 border-blue-500 pl-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-900">v0.1.0</h3>
-                  <span className="text-sm text-gray-500">Bootstrap</span>
-                </div>
-                <p className="text-gray-600 mb-3">
-                  Initial bootstrap version with core infrastructure.
-                </p>
-                <ul className="text-sm text-gray-600 space-y-1">
-                  <li>• Next.js 14 with App Router and TypeScript</li>
-                  <li>• Tailwind CSS and shadcn/ui components</li>
-                  <li>• Prisma with SQLite database</li>
-                  <li>• Version badge and health endpoint</li>
-                  <li>• Audit logging system</li>
-                  <li>• Basic role-based navigation</li>
-                  <li>• ESLint, Prettier, and testing setup</li>
-                </ul>
-              </div>
-
-              <div className="border-l-4 border-gray-300 pl-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-500">v0.2.0</h3>
-                  <span className="text-sm text-gray-400">Planned</span>
-                </div>
-                <p className="text-gray-500 mb-3">
-                  Role switcher with SSR-safe persistence and guards.
-                </p>
-                <ul className="text-sm text-gray-500 space-y-1">
-                  <li>• Dynamic role switching</li>
-                  <li>• Role-based route guards</li>
-                  <li>• Settings page with role information</li>
-                </ul>
-              </div>
-
-              <div className="border-l-4 border-gray-300 pl-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-500">v0.3.0</h3>
-                  <span className="text-sm text-gray-400">Planned</span>
-                </div>
-                <p className="text-gray-500 mb-3">
-                  Manager chat memory with sessions, recall, TTL, and pins.
-                </p>
-                <ul className="text-sm text-gray-500 space-y-1">
-                  <li>• Chat interface with memory</li>
-                  <li>• Role-scoped memory storage</li>
-                  <li>• TTL and pinning support</li>
-                </ul>
-              </div>
-
-              <div className="border-l-4 border-gray-300 pl-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-500">v0.4.0</h3>
-                  <span className="text-sm text-gray-400">Planned</span>
-                </div>
-                <p className="text-gray-500 mb-3">
-                  structure.md ingestion for canonical roles and navigation.
-                </p>
-                <ul className="text-sm text-gray-500 space-y-1">
-                  <li>• YAML frontmatter parsing</li>
-                  <li>• Dynamic navigation from structure</li>
-                  <li>• Route guarding based on structure</li>
-                </ul>
-              </div>
-
-              <div className="border-l-4 border-gray-300 pl-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <h3 className="text-lg font-semibold text-gray-500">v0.5.0</h3>
-                  <span className="text-sm text-gray-400">Planned</span>
-                </div>
-                <p className="text-gray-500 mb-3">
-                  In-app changelog and deploy audit.
-                </p>
-                <ul className="text-sm text-gray-500 space-y-1">
-                  <li>• About page with changelog</li>
-                  <li>• Deploy audit idempotency</li>
-                  <li>• Version history tracking</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+    <main className="container mx-auto px-4 py-8 prose prose-sm sm:prose">
+      <h1>Changelog</h1>
+      <div 
+        className="changelog-content"
+        dangerouslySetInnerHTML={{ __html: html }} 
+        suppressHydrationWarning={true}
+      />
+    </main>
   );
+}
+
+async function renderChangelog(): Promise<string> {
+  try {
+    // Read the markdown at build/request time (server-side)
+    const fs = await import("fs/promises");
+    const path = await import("path");
+    const filePath = path.resolve(process.cwd(), "src/content/CHANGELOG.md");
+    const md = await fs.readFile(filePath, "utf8");
+    return simpleMarkdownToHtml(md);
+  } catch (error) {
+    console.error("Failed to read changelog:", error);
+    return "<p>Changelog not available.</p>";
+  }
+}
+
+/** Minimal markdown -> HTML (no external deps)
+ * Supports:
+ *  - h2 (## ), h3 (### )
+ *  - unordered lists (- )
+ *  - paragraphs (plain text)
+ *  - code fences (``` ... ```)
+ * NOTE: intentionally conservative to avoid XSS; only escapes raw text content.
+ */
+function simpleMarkdownToHtml(md: string): string {
+  // Escape HTML
+  const esc = (s: string) =>
+    s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+
+  // Handle code fences first
+  let inCode = false;
+  const lines = md.split(/\r?\n/);
+  const out: string[] = [];
+  let listOpen = false;
+
+  const endList = () => {
+    if (listOpen) {
+      out.push("</ul>");
+      listOpen = false;
+    }
+  };
+
+  for (let raw of lines) {
+    const line = raw.trimEnd();
+
+    // code block fences
+    if (/^```/.test(line)) {
+      endList();
+      if (!inCode) {
+        inCode = true;
+        out.push("<pre><code>");
+      } else {
+        inCode = false;
+        out.push("</code></pre>");
+      }
+      continue;
+    }
+
+    if (inCode) {
+      out.push(esc(raw));
+      continue;
+    }
+
+    // headings
+    if (line.startsWith("### ")) {
+      endList();
+      out.push(`<h3>${esc(line.slice(4))}</h3>`);
+      continue;
+    }
+    if (line.startsWith("## ")) {
+      endList();
+      out.push(`<h2>${esc(line.slice(3))}</h2>`);
+      continue;
+    }
+
+    // list items
+    if (line.startsWith("- ")) {
+      if (!listOpen) {
+        out.push("<ul>");
+        listOpen = true;
+      }
+      out.push(`<li>${esc(line.slice(2))}</li>`);
+      continue;
+    }
+
+    // blank line
+    if (line === "") {
+      endList();
+      out.push("");
+      continue;
+    }
+
+    // paragraph
+    endList();
+    out.push(`<p>${esc(line)}</p>`);
+  }
+  endList();
+
+  // join with newlines so <pre> keeps spacing
+  const result = out.join("\n");
+  // Ensure consistent output to avoid hydration mismatches
+  return result.replace(/\n{3,}/g, "\n\n");
 }

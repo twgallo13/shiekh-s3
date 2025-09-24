@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+// side-effect import for approval auto-timeouts (no-op unless events fire)
+import "../lib/listeners/approval-timeouts";
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],

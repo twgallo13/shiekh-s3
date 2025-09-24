@@ -1,8 +1,17 @@
 import { on } from "../events";
-// Attach minimal console logger in dev only
+
+function log(name: string, payload: unknown) {
+  try {
+    // pretty JSON with context if keys exist
+    console.log("[event]", name, JSON.stringify(payload, null, 2));
+  } catch {
+    console.log("[event]", name, payload);
+  }
+}
+
 if (process.env.NODE_ENV !== "production") {
-  on("ReplenishmentDraftCreated", (p) => console.log("[event] ReplenishmentDraftCreated", p));
-  on("ApprovalRequested", (p) => console.log("[event] ApprovalRequested", p));
-  on("ApprovalGranted", (p) => console.log("[event] ApprovalGranted", p));
-  on("ApprovalDenied", (p) => console.log("[event] ApprovalDenied", p));
+  on("ReplenishmentDraftCreated", (p) => log("ReplenishmentDraftCreated", p));
+  on("ApprovalRequested",       (p) => log("ApprovalRequested", p));
+  on("ApprovalGranted",         (p) => log("ApprovalGranted", p));
+  on("ApprovalDenied",          (p) => log("ApprovalDenied", p));
 }

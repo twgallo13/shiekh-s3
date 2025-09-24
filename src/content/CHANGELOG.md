@@ -31,6 +31,84 @@
 - Error boundaries provide user-friendly error recovery
 - CI now uses `npm ci` for deterministic builds
 
+## v1.1.0 - Approval Auto-Timeouts
+
+### Added
+- **In-Process TTL Management**: Automatic timeout handling for approval requests
+- **Event-Driven Timeouts**: `ApprovalRequested` starts TTL timer, `ApprovalGranted`/`ApprovalDenied` cancel it
+- **Auto-Denial on Timeout**: System emits `ApprovalDenied` with `reason="timeout"` when TTL expires
+- **Configurable TTL**: Timeout duration configurable via `NEXT_PUBLIC_APPROVAL_TTL_MS` environment variable
+
+### Technical Details
+- Default TTL: 24 hours (86,400,000 milliseconds)
+- Timer management uses in-process Map with automatic cleanup
+- Timeout events are automatically audited via existing events bus
+- No database schema changes - purely in-memory timer management
+- Safe error handling prevents timer failures from breaking main application flow
+
+## v1.0.2 - Documentation: Audit API & UI
+
+### Added
+- **Audit API Documentation**: Added comprehensive documentation for `GET /api/audit` endpoint
+- **Audit UI Documentation**: Documented `/audit` page with filters and pagination functionality
+- **API Specification**: Complete documentation of headers, query parameters, and response format
+
+### Technical Details
+- Audit API supports filtering by actorUserId, actorRole, correlationId, from, to
+- Pagination with configurable limit (default 50, max 100) and offset
+- Observability headers (X-Trace-Id, Idempotency-Key) echoed back by API
+- RBAC enforcement: Admin/FM only access with standardized error messages per Section 7
+
+## v0.9.3 - Documentation Update: Approvals & Audit
+
+### Added
+- **Error Model Documentation**: Updated `docs/events-approvals.md` with standardized error envelope specification
+- **Role-aware CTAs Documentation**: Documented Approve/Deny button behavior and role resolution
+- **Audit Peek Documentation**: Added documentation for the new `/audit` page functionality
+
+### Technical Details
+- Error envelope follows spec with codes: AUTH_002, VAL_002, SYS_001
+- Observability headers (X-Trace-Id, Idempotency-Key) are echoed back by the API
+- Role-aware UI components with fallback to x-role cookie
+- Audit page with non-breaking implementation and ADMIN/FM access control
+
+## v0.8.4 - Enhanced Dev Diagnostics
+
+### Added
+- **Pretty-Print Event Logging**: Console listeners now format JSON payloads with proper indentation for better readability
+- **Error-Safe Logging**: Fallback handling for non-serializable payloads in development mode
+- **Improved Debugging**: Enhanced developer experience with structured event output
+
+### Technical Details
+- Event payloads are now pretty-printed with 2-space indentation using `JSON.stringify(payload, null, 2)`
+- Safe error handling prevents console logging failures from breaking the main application flow
+- Development-only feature that doesn't impact production performance
+
+## v0.8.2 - UI Feedback for Approvals
+
+### Added
+- **Approval Status UI**: Created `/approvals` page with Tailwind alert banners for approval feedback
+- **Role-Based Access**: UI visibility controlled by RBAC (ADMIN/FM/DM can view approvals)
+- **Status Indicators**: Green for granted, red for denied, blue for pending approvals
+- **API Integration**: Displays approval metadata and timestamps
+
+### Technical Details
+- Approval status banners with appropriate color coding and icons
+- Access control enforced at UI level matching Section 12 RBAC spec
+- Mock data structure ready for real approval data integration
+- API information section for developer reference
+
+## v0.7.4 - Documentation & Developer Notes
+
+### Added
+- **Developer Documentation**: Created `docs/events-approvals.md` with comprehensive guide for events bus and approvals API usage
+- **Section 17 Compliance**: Updated documentation to align with structure.md developer notes requirements
+
+### Technical Details
+- Events bus and approvals API usage documented for developers
+- Clear RBAC guidelines and API endpoint specifications
+- Development mode diagnostics and console logging explained
+
 ## v0.1.0 - Initial Bootstrap
 
 ### Added
