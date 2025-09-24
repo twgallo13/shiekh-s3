@@ -1,22 +1,33 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { logAudit } from '@/lib/audit';
 
 // Mock Prisma Client
-const mockCreate = vi.fn();
-const mockFindMany = vi.fn();
-
 vi.mock('@prisma/client', () => ({
   PrismaClient: vi.fn().mockImplementation(() => ({
     auditLog: {
-      create: mockCreate,
-      findMany: mockFindMany,
+      create: vi.fn(),
+      findMany: vi.fn(),
     },
   })),
 }));
 
+// Import after mocking
+import { logAudit } from '@/lib/audit';
+import { PrismaClient } from '@prisma/client';
+
 describe('Audit Module', () => {
+  let mockCreate: ReturnType<typeof vi.fn>;
+  let mockFindMany: ReturnType<typeof vi.fn>;
+
   beforeEach(() => {
     vi.clearAllMocks();
+    const mockPrisma = new PrismaClient() as unknown as {
+      auditLog: {
+        create: ReturnType<typeof vi.fn>;
+        findMany: ReturnType<typeof vi.fn>;
+      };
+    };
+    mockCreate = mockPrisma.auditLog.create;
+    mockFindMany = mockPrisma.auditLog.findMany;
   });
 
   it('should log audit entry successfully', async () => {

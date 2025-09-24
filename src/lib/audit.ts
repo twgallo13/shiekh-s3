@@ -16,7 +16,7 @@ export async function logAudit(entry: AuditLogEntry): Promise<void> {
         ts: new Date(),
         actor: entry.actor,
         action: entry.action,
-        payload: entry.payload || {},
+        payload: JSON.stringify(entry.payload || {}),
         reason: entry.reason,
       },
     });
