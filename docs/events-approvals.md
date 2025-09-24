@@ -64,3 +64,14 @@ The approvals page renders Approve/Deny buttons only for ADMIN and FM. Role is r
 
 ## Development
 In dev mode, listeners in `src/lib/listeners/log-to-console.ts` log events to console for diagnostics.
+
+## Dashboard UI Features
+- Quick Approvals (request, grant/deny by role)
+- Recent Audit table (Admin/FM)
+- Forecast Demo + Replenishment Draft Demo
+- Events Monitor (dev-only)
+- History widgets (forecasts, replenishments)
+- Role Switcher (dev-only)
+- User Profile card (role + version)
+- Notifications banner (dev-only)
+- Dark Mode toggle

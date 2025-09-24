@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import ToastHost from "@/components/ui/ToastHost";
 
 // side-effect import for approval auto-timeouts (no-op unless events fire)
 import "../lib/listeners/approval-timeouts";
+// dev events capture (no-op in prod)
+import "../lib/listeners/dev-capture";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,7 +34,15 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        {children}
+        <a href="#main" className="sr-only focus:not-sr-only absolute left-2 top-2 bg-black text-white px-3 py-1 rounded">Skip to content</a>
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if (localStorage.getItem('theme') === 'dark') {
+              document.body.classList.add('dark');
+            }
+          `
+        }} />
+        <ToastHost>{children}</ToastHost>
       </body>
     </html>
   );
