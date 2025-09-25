@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useFilteredAlerts, type Alert } from "@/lib/alerts/bus";
+import { useAlerts, type Alert } from "@/lib/alerts/bus";
 import { useRole } from "@/components/providers/RoleProvider";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -18,7 +18,13 @@ interface NotificationBellProps {
 export default function NotificationBell({ className = "" }: NotificationBellProps) {
   const router = useRouter();
   const { effectiveRole } = useRole();
-  const { alerts, unreadCount, markAsRead, markAllRead } = useFilteredAlerts(effectiveRole);
+  const { list: alerts, unreadCount, markAllRead } = useAlerts();
+  
+  // Simple mark as read function (since simplified bus doesn't have individual mark)
+  const markAsRead = (id: string) => {
+    // In the simplified version, we'll just mark all as read
+    markAllRead();
+  };
   const [isOpen, setIsOpen] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
 

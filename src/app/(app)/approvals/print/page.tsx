@@ -38,6 +38,19 @@ export default function ApprovalsPrintPage() {
           <h1 className="text-2xl font-bold text-red-600 mb-4">Permission Denied</h1>
           <p className="text-gray-600">You do not have permission to access this page.</p>
           <p className="text-sm text-gray-500 mt-2">Required roles: DM, FM, or ADMIN</p>
+          <div className="mt-4 p-4 bg-gray-100 rounded text-left text-xs font-mono">
+            <pre>{JSON.stringify({
+              error: {
+                code: "AUTH_002",
+                message: "Insufficient privileges for operation",
+                details: {
+                  requiredRoles: ["DM", "FM", "ADMIN"],
+                  currentRole: effectiveRole,
+                  operation: "print_approvals"
+                }
+              }
+            }, null, 2)}</pre>
+          </div>
         </div>
       </div>
     );

@@ -46,17 +46,18 @@ export default function RootLayout({
             }
           `
         }} />
-        <ToastHost>
-          <RoleProvider>
-            <CommandPaletteProvider>
-              <PerfHUDProvider>
-                <SchemaOverlayProvider>
-                  {children}
-                </SchemaOverlayProvider>
-              </PerfHUDProvider>
-            </CommandPaletteProvider>
-          </RoleProvider>
-        </ToastHost>
+        <RoleProvider>
+          <CommandPaletteProvider>
+            <PerfHUDProvider>
+              <SchemaOverlayProvider>
+                {children}
+              </SchemaOverlayProvider>
+            </PerfHUDProvider>
+          </CommandPaletteProvider>
+        </RoleProvider>
+
+        {/* UI singletons mounted as siblings */}
+        <ToastHost />
       </body>
     </html>
   );

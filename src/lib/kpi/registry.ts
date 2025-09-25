@@ -112,12 +112,14 @@ export function checkBudgetBreach(kpi: KpiDefinition): void {
   const criticalThreshold = kpi.threshold.critical;
   const warnThreshold = kpi.threshold.warn;
   
-  if (kpi.value >= criticalThreshold) {
-    // Emit critical alert
-    emitBudgetBreachAlert(kpi, criticalThreshold, 'CRITICAL');
-  } else if (kpi.value >= warnThreshold) {
-    // Emit warning alert
-    emitBudgetBreachAlert(kpi, warnThreshold, 'WARN');
+  if (typeof window !== 'undefined') {
+    if (kpi.value >= criticalThreshold) {
+      // Emit critical alert
+      emitBudgetBreachAlert(kpi, criticalThreshold, 'CRITICAL');
+    } else if (kpi.value >= warnThreshold) {
+      // Emit warning alert
+      emitBudgetBreachAlert(kpi, warnThreshold, 'WARN');
+    }
   }
 }
 

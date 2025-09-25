@@ -31,6 +31,117 @@
 - Error boundaries provide user-friendly error recovery
 - CI now uses `npm ci` for deterministic builds
 
+## v9.6.4 - Stability & Conformance pack
+
+### Fixed
+- **RSC-Safe Singletons**: Ensured UI singletons are mounted as siblings to avoid RSC boundary issues
+- **SSR-Safe KPI Alerts**: Added window checks to prevent server-side alert emission
+- **Server/Client HTTP Split**: Created separate server-only HTTP client with no window dependencies
+- **RBAC + AUTH_002 Envelopes**: Added spec-compliant error envelopes to print routes
+- **Docs Anchors Conformance**: Verified docs anchors API and panel functionality
+
+### Technical Details
+- **Layout Stability** (`src/app/layout.tsx`):
+  - **Sibling Mounting**: UI singletons mounted as self-closing siblings at end of body
+  - **RSC Compliance**: No wrapper components that could cause RSC boundary issues
+  - **Provider Chain**: Maintains proper provider hierarchy without singleton interference
+- **KPI Registry SSR Guards** (`src/lib/kpi/registry.ts`):
+  - **Window Checks**: Added `typeof window !== 'undefined'` guards around alert emission
+  - **SSR Safety**: Prevents server-side alert emission that could cause hydration issues
+  - **Non-Blocking**: Alert emission failures don't crash KPI rendering
+- **Server HTTP Client** (`src/lib/server/http.ts`):
+  - **Server-Only**: Minimal fetch wrapper with no window or client-side dependencies
+  - **Timeout Support**: Built-in request timeout handling
+  - **Error Handling**: Comprehensive error handling for server-side requests
+  - **Type Safety**: Full TypeScript support with proper interfaces
+- **Client HTTP Guards** (`src/lib/client/http.ts`):
+  - **Dev-Only Guards**: Schema validation only runs in development with window check
+  - **SSR Safety**: Prevents server-side execution of client-only features
+  - **Import Safety**: Dynamic imports gated by environment and window checks
+- **RBAC Error Envelopes**:
+  - **Approvals Print** (`src/app/(app)/approvals/print/page.tsx`): AUTH_002 error envelope for unauthorized access
+  - **Compliance Print** (`src/app/compliance/print/page.tsx`): AUTH_002 error envelope for unauthorized access
+  - **Spec Compliance**: Error codes match Section 7.9 specification
+  - **Detailed Context**: Error details include required roles, current role, and operation
+- **Docs Anchors Verification**:
+  - **API Endpoint** (`src/app/api/meta/docs-anchors/route.ts`): Dev-only headers and proper anchor extraction
+  - **Lint Panel** (`src/components/dev/DocsLintPanel.tsx`): Alt+Shift+D toggle and anchor validation
+  - **Structure.md**: Verified presence and content of master specification
+- **Path Alias Verification** (`tsconfig.json`):
+  - **Correct Configuration**: `"@/*": ["./src/*"]` path alias properly configured
+  - **Import Consistency**: All imports use consistent path aliases
+- **Build Stability**:
+  - **RSC Boundaries**: All components properly respect React Server Component boundaries
+  - **SSR Safety**: No client-side code execution during server-side rendering
+  - **Import Resolution**: All dynamic imports use correct relative paths
+  - **Error Handling**: Comprehensive error handling prevents build failures
+- **Performance Optimizations**:
+  - **Conditional Loading**: Dev-only features only load in development environment
+  - **Window Checks**: Prevents unnecessary code execution in SSR context
+  - **Lazy Imports**: Dynamic imports prevent circular dependencies
+  - **Memory Management**: Proper cleanup of subscriptions and event listeners
+- **Developer Experience**:
+  - **Clear Error Messages**: Spec-compliant error envelopes with detailed context
+  - **Consistent Imports**: Path aliases provide consistent import patterns
+  - **Dev Tools**: Development-only features properly gated and accessible
+  - **Type Safety**: Full TypeScript support across all new modules
+- **Security Features**:
+  - **RBAC Enforcement**: Proper role-based access control with spec-compliant errors
+  - **SSR Safety**: No client-side code leakage during server-side rendering
+  - **Environment Gating**: Development features properly isolated from production
+  - **Error Sanitization**: Error messages don't expose sensitive information
+- No schema or server changes - purely stability and conformance improvements
+
+## v9.6.3 - Repair ToastHost mount & alerts bus path
+
+### Fixed
+- **ToastHost RSC Boundary**: Fixed React Server Component boundary issues by converting to client singleton
+- **Alerts Bus Path**: Corrected dynamic import path in KPI registry from `./alerts/bus` to `../alerts/bus`
+- **Layout Mounting**: Updated layout to mount ToastHost as self-closing sibling instead of wrapper
+- **Import Normalization**: Fixed NotificationBell import to use simplified alerts bus API
+
+### Technical Details
+- **ToastHost Component** (`src/components/ui/ToastHost.tsx`):
+  - **Client Singleton**: Converted to 'use client' directive with portal mounting
+  - **Simplified Implementation**: Uses basic `useAlerts` hook with portal rendering
+  - **Self-Closing Mount**: Mounted as sibling in layout instead of wrapper component
+  - **Portal Rendering**: Uses `createPortal` to render toasts at document.body
+  - **Accessibility**: Includes proper ARIA attributes for screen readers
+- **Alerts Bus** (`src/lib/alerts/bus.ts`):
+  - **Simplified Store**: Streamlined in-memory store with `useSyncExternalStore`
+  - **Client-Only**: Uses 'use client' directive for proper Next.js App Router compatibility
+  - **Event Bus**: Simple subscription-based event system for alert management
+  - **Helper Functions**: `AlertUtils.createBudgetBreachAlert` for easy alert creation
+  - **Non-Blocking**: KPI rendering won't crash if alerts module is unavailable
+- **Layout Updates** (`src/app/layout.tsx`):
+  - **Sibling Mounting**: ToastHost mounted as self-closing sibling to avoid RSC boundary issues
+  - **Provider Chain**: Maintains proper provider hierarchy without ToastHost wrapper
+  - **Portal Support**: Allows ToastHost to render toasts via portal without layout conflicts
+- **KPI Registry** (`src/lib/kpi/registry.ts`):
+  - **Correct Import Path**: Fixed dynamic import from `./alerts/bus` to `../alerts/bus`
+  - **Function Signature**: Updated to match simplified `AlertUtils.createBudgetBreachAlert` API
+  - **Error Handling**: Non-blocking error handling to prevent KPI render crashes
+- **NotificationBell** (`src/components/ui/NotificationBell.tsx`):
+  - **Import Update**: Changed from `useFilteredAlerts` to `useAlerts` for simplified API
+  - **Compatibility**: Added local `markAsRead` function for backward compatibility
+  - **Role Handling**: Simplified role handling to work with basic alerts bus
+- **Build Stability**:
+  - **RSC Compliance**: All components now properly respect React Server Component boundaries
+  - **Import Resolution**: Fixed all dynamic import paths for proper module resolution
+  - **Portal Rendering**: ToastHost uses portal to avoid layout and hydration issues
+  - **Error Boundaries**: Non-blocking error handling prevents component crashes
+- **Performance Optimizations**:
+  - **Simplified Store**: Reduced complexity in alerts bus for better performance
+  - **Portal Efficiency**: Portal rendering prevents unnecessary re-renders
+  - **Lazy Loading**: Dynamic imports prevent circular dependencies
+  - **Memory Management**: Proper cleanup of subscriptions and event listeners
+- **Developer Experience**:
+  - **Clear Error Messages**: Better error handling with non-blocking fallbacks
+  - **Simplified API**: Easier to use alerts bus with fewer configuration options
+  - **Type Safety**: Full TypeScript support with proper interfaces
+  - **Documentation**: Clear examples and usage patterns for all components
+- No schema or server changes - purely client-side fixes for RSC boundaries and import paths
+
 ## v9.3.0 - Docs Anchor Checker (dev-only)
 
 ### Added

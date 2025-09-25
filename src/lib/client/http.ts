@@ -8,8 +8,8 @@
 let validate: any = null;
 let addValidationEntry: any = null;
 
-// Lazy load schema validation in development
-if (process.env.NODE_ENV === 'development') {
+// Lazy load schema validation in development (client-side only)
+if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
   import('../dev/schemaCheck').then(module => {
     validate = module.validate;
   });
@@ -92,8 +92,8 @@ class HttpClient {
     // Extract endpoint for schema validation
     const endpoint = this.extractEndpoint(fullUrl, fetchOptions.method || 'GET');
 
-    // Validate request body if present (dev-only)
-    if (process.env.NODE_ENV === 'development' && validate && fetchOptions.body) {
+      // Validate request body if present (dev-only, client-side only)
+      if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && validate && fetchOptions.body) {
       try {
         const requestData = typeof fetchOptions.body === 'string' 
           ? JSON.parse(fetchOptions.body) 
@@ -126,8 +126,8 @@ class HttpClient {
 
       const responseData = await this.parseResponse(response);
 
-      // Validate response (dev-only)
-      if (process.env.NODE_ENV === 'development' && validate) {
+      // Validate response (dev-only, client-side only)
+      if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined' && validate) {
         try {
           const validationResult = validate(endpoint, responseData, false);
           
@@ -522,7 +522,7 @@ export function isSystemError(error: any): boolean {
  * Called by SchemaOverlay to receive validation entries
  */
 export function setValidationEntryCallback(callback: (endpoint: string, data: any, isRequest: boolean) => void): void {
-  if (process.env.NODE_ENV === 'development') {
+  if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
     addValidationEntry = callback;
   }
 }
