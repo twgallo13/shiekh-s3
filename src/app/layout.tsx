@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ToastHost from "@/components/ui/ToastHost";
+import CommandPaletteProvider from "@/components/providers/CommandPaletteProvider";
+import RoleProvider from "@/components/providers/RoleProvider";
+import PerfHUDProvider from "@/components/providers/PerfHUDProvider";
+import SchemaOverlayProvider from "@/components/providers/SchemaOverlayProvider";
 
 // side-effect import for approval auto-timeouts (no-op unless events fire)
 import "../lib/listeners/approval-timeouts";
@@ -42,7 +46,17 @@ export default function RootLayout({
             }
           `
         }} />
-        <ToastHost>{children}</ToastHost>
+        <ToastHost>
+          <RoleProvider>
+            <CommandPaletteProvider>
+              <PerfHUDProvider>
+                <SchemaOverlayProvider>
+                  {children}
+                </SchemaOverlayProvider>
+              </PerfHUDProvider>
+            </CommandPaletteProvider>
+          </RoleProvider>
+        </ToastHost>
       </body>
     </html>
   );

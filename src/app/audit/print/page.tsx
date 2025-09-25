@@ -1,0 +1,298 @@
+"use client";
+import React, { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
+import { useRole } from "@/components/providers/RoleProvider";
+import { APP_VERSION } from "@/app/version";
+import PrintFrame from "@/components/print/PrintFrame";
+import Provenance from "@/components/print/Provenance";
+
+interface AuditEntry {
+  id: string;
+  timestamp: string;
+  actorUserId: string;
+  actorRole: string;
+  action: string;
+  correlationId: string;
+  reasonCode?: string;
+  details: string;
+}
+
+interface ComplianceEvent {
+  id: string;
+  timestamp: string;
+  type: string;
+  status: string;
+  warehouseId: string;
+  details: string;
+}
+
+/**
+ * Print-Friendly Audit Page - Admin/FM Only
+ * Minimal chrome with clean print layout
+ * RBAC: Only accessible to Admin and Finance Manager roles
+ */
+export default function AuditPrintPage() {
+  const { effectiveRole } = useRole();
+  const searchParams = useSearchParams();
+  const [auditData, setAuditData] = useState<AuditEntry[]>([]);
+  const [complianceData, setComplianceData] = useState<ComplianceEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab] = useState(searchParams.get('tab') || 'audit');
+
+  // RBAC check - only Admin and FM can access
+  if (!["ADMIN", "FM"].includes(effectiveRole)) {
+    return (
+      <div className="min-h-screen bg-white p-8">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Permission Denied</h1>
+          <p className="text-gray-600">You do not have permission to access this page.</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Load data
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Mock audit data
+        const mockAuditData: AuditEntry[] = [
+          {
+            id: "audit-001",
+            timestamp: "2024-01-15T10:30:00Z",
+            actorUserId: "user-123",
+            actorRole: "ADMIN",
+            action: "USER_LOGIN",
+            correlationId: "corr-abc123",
+            reasonCode: "AUTH_SUCCESS",
+            details: "User successfully logged in from IP 192.168.1.100"
+          },
+          {
+            id: "audit-002",
+            timestamp: "2024-01-15T10:25:00Z",
+            actorUserId: "user-456",
+            actorRole: "FM",
+            action: "BUDGET_APPROVAL",
+            correlationId: "corr-def456",
+            reasonCode: "APPROVAL_GRANTED",
+            details: "Budget approval granted for Q1 2024 forecast"
+          },
+          {
+            id: "audit-003",
+            timestamp: "2024-01-15T10:20:00Z",
+            actorUserId: "user-789",
+            actorRole: "SM",
+            action: "VARIANCE_CREATED",
+            correlationId: "corr-ghi789",
+            reasonCode: "THRESHOLD_EXCEEDED",
+            details: "Variance created for product SKU-12345, amount: $1,250.00"
+          }
+        ];
+
+        // Mock compliance data
+        const mockComplianceData: ComplianceEvent[] = [
+          {
+            id: "comp-001",
+            timestamp: "2024-01-15T14:30:00Z",
+            type: "SAFETY_INSPECTION",
+            status: "PASSED",
+            warehouseId: "WH-001",
+            details: "Monthly safety inspection completed - all safety protocols followed"
+          },
+          {
+            id: "comp-002",
+            timestamp: "2024-01-15T13:45:00Z",
+            type: "INVENTORY_AUDIT",
+            status: "FAILED",
+            warehouseId: "WH-002",
+            details: "Inventory discrepancy found - 15 items missing from expected count"
+          }
+        ];
+        
+        setAuditData(mockAuditData);
+        setComplianceData(mockComplianceData);
+      } catch (error) {
+        console.error('Failed to load data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  // Auto-print when page loads
+  useEffect(() => {
+    if (!loading) {
+      setTimeout(() => {
+        window.print();
+      }, 1000);
+    }
+  }, [loading]);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString();
+  };
+
+  const getCurrentDate = () => {
+    return new Date().toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-white p-8">
+        <div className="text-center">
+          <p className="text-gray-600">Loading data for printing...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Extract filters from search params
+  const filters = {
+    tab: activeTab,
+    role: effectiveRole,
+    dateRange: 'All Available',
+    recordCount: activeTab === 'audit' ? auditData.length : complianceData.length
+  };
+
+  return (
+    <PrintFrame 
+      title={activeTab === 'audit' ? 'Audit Log Report' : 'Compliance Events Report'}
+      subtitle={`Generated by ${effectiveRole} | ${getCurrentDate()}`}
+    >
+      {/* Provenance Block */}
+      <Provenance 
+        filters={filters}
+        route="/audit/print"
+      />
+
+      {/* Filter Summary */}
+      <div className="print-filters mb-6 p-4 bg-gray-50 border border-gray-200 rounded avoid-break">
+        <h2 className="text-lg font-semibold text-gray-900 mb-2">Filter Summary</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div>
+            <span className="font-medium">Report Type:</span>
+            <span className="ml-2">{activeTab === 'audit' ? 'Audit Log' : 'Compliance Events'}</span>
+          </div>
+          <div>
+            <span className="font-medium">Generated By:</span>
+            <span className="ml-2">{effectiveRole}</span>
+          </div>
+          <div>
+            <span className="font-medium">Date Range:</span>
+            <span className="ml-2">All Available</span>
+          </div>
+          <div>
+            <span className="font-medium">Total Records:</span>
+            <span className="ml-2">{activeTab === 'audit' ? auditData.length : complianceData.length}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Audit Table */}
+      {activeTab === 'audit' && (
+        <div className="print-table avoid-break">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Audit Entries</h2>
+          <table className="w-full border-collapse border border-gray-300 text-sm print-table">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Timestamp</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Actor User ID</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Actor Role</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Action</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Correlation ID</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Reason Code</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {auditData.map((entry) => (
+                <tr key={entry.id}>
+                  <td className="border border-gray-300 px-3 py-2">{formatDate(entry.timestamp)}</td>
+                  <td className="border border-gray-300 px-3 py-2 font-mono">{entry.actorUserId}</td>
+                  <td className="border border-gray-300 px-3 py-2">{entry.actorRole}</td>
+                  <td className="border border-gray-300 px-3 py-2 font-medium">{entry.action}</td>
+                  <td className="border border-gray-300 px-3 py-2 font-mono">{entry.correlationId}</td>
+                  <td className="border border-gray-300 px-3 py-2">{entry.reasonCode || '-'}</td>
+                  <td className="border border-gray-300 px-3 py-2">{entry.details}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Compliance Table */}
+      {activeTab === 'compliance' && (
+        <div className="print-table avoid-break">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Compliance Events</h2>
+          <table className="w-full border-collapse border border-gray-300 text-sm print-table">
+            <thead>
+              <tr className="bg-gray-100">
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Timestamp</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Type</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Status</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Warehouse ID</th>
+                <th className="border border-gray-300 px-3 py-2 text-left font-medium">Details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {complianceData.map((event) => (
+                <tr key={event.id}>
+                  <td className="border border-gray-300 px-3 py-2">{formatDate(event.timestamp)}</td>
+                  <td className="border border-gray-300 px-3 py-2">{event.type.replace(/_/g, ' ')}</td>
+                  <td className="border border-gray-300 px-3 py-2">{event.status}</td>
+                  <td className="border border-gray-300 px-3 py-2 font-mono">{event.warehouseId}</td>
+                  <td className="border border-gray-300 px-3 py-2">{event.details}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Signatures */}
+      <div className="signatures-section mt-8 pt-4 border-t border-gray-300 avoid-break">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Signatures</h3>
+        <div className="grid grid-cols-3 gap-8">
+          <div className="signature-block">
+            <div className="border-b border-gray-300 pb-1 mb-2">
+              <span className="text-sm font-medium">Prepared by</span>
+            </div>
+            <div className="h-12 border-b border-gray-300"></div>
+            <div className="text-xs text-gray-500 mt-1">Name & Date</div>
+          </div>
+          <div className="signature-block">
+            <div className="border-b border-gray-300 pb-1 mb-2">
+              <span className="text-sm font-medium">Reviewed by</span>
+            </div>
+            <div className="h-12 border-b border-gray-300"></div>
+            <div className="text-xs text-gray-500 mt-1">Name & Date</div>
+          </div>
+          <div className="signature-block">
+            <div className="border-b border-gray-300 pb-1 mb-2">
+              <span className="text-sm font-medium">Approved by</span>
+            </div>
+            <div className="h-12 border-b border-gray-300"></div>
+            <div className="text-xs text-gray-500 mt-1">Name & Date</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Important Notes */}
+      <div className="important-notes mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded avoid-break">
+        <h4 className="text-sm font-semibold text-yellow-800 mb-2">Important Notes</h4>
+        <div className="text-xs text-yellow-700 space-y-1">
+          <p><strong>Immutable Data:</strong> All audit entries are permanent and cannot be modified (per §13.3).</p>
+          <p><strong>Retention:</strong> Data retention follows regulatory compliance requirements.</p>
+          <p><strong>Confidentiality:</strong> This document should be handled according to company security policies.</p>
+        </div>
+      </div>
+    </PrintFrame>
+  );
+}

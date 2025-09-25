@@ -8,10 +8,17 @@ import { Button } from "@/components/ui/Button";
 import Toolbar from "@/components/ui/Toolbar";
 import { Badge } from "@/components/ui/Badge";
 import { useToast } from "@/components/ui/ToastHost";
+import ToastHost from "@/components/ui/ToastHost";
+import NotificationBell from "@/components/ui/NotificationBell";
 import Skeleton from "@/components/ui/Skeleton";
 import Modal from "@/components/ui/Modal";
 import AboutModal from "@/components/app/AboutModal";
 import DemoTour from "@/components/app/DemoTour";
+import ShortcutsModal from "@/components/ui/ShortcutsModal";
+import DataTable from "@/components/ui/DataTable";
+import KpiMini from "@/components/ui/KpiMini";
+import AcceptancePanel from "@/components/dev/AcceptancePanel";
+import { useKpiEditor } from "@/components/dev/KpiEditor";
 import CopyButton from "@/components/ui/CopyButton";
 import CollapsibleJson from "@/components/ui/CollapsibleJson";
 import Tooltip from "@/components/ui/Tooltip";
@@ -19,6 +26,10 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import StatusBar from "@/components/ui/StatusBar";
 import useHotkeys from "@/lib/client/useHotkeys";
 import useDebouncedValue from "@/lib/client/useDebouncedValue";
+import { getKpisForRole } from "@/lib/kpi/registry";
+import { useLayoutPref } from "@/lib/hooks/useLayoutPref";
+import "@/lib/tests/acceptance/scenarios.sample";
+import { useRole } from "@/components/providers/RoleProvider";
 import useRelativeTime from "@/lib/client/useRelativeTime";
 import downloadJson from "@/lib/client/downloadJson";
 import downloadCsv from "@/lib/client/downloadCsv";
@@ -256,6 +267,7 @@ export default function DashboardPage() {
   // settings state
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [batchConfirmOpen, setBatchConfirmOpen] = useState(false);
   const [batchKind, setBatchKind] = useState<null | "request" | "grant" | "deny">(null);
   const [pollMs, setPollMs] = useState<number>(() => Number(localStorage.getItem("pollMs") || 2000));
@@ -264,7 +276,7 @@ export default function DashboardPage() {
   const [useRelative, setUseRelative] = useState(false);
 
   // layout preference state
-  const [layoutPref, setLayoutPref] = useState<string>(() => localStorage.getItem("layoutPref") || "roomy");
+  const [layoutPref, setLayoutPref] = useLayoutPref();
 
   // payload column width state
   const [payloadW, setPayloadW] = useState<string>(() => {
@@ -404,6 +416,46 @@ export default function DashboardPage() {
     }
   }
 
+  // Handle command palette actions
+  useEffect(() => {
+    const handleCommandAction = (e: CustomEvent) => {
+      const { commandId } = e.detail;
+      
+      switch (commandId) {
+        case 'action-refresh':
+          refreshAudit();
+          loadEvents();
+          break;
+        case 'action-export':
+          // Trigger export functionality
+          if (evRows && evRows.length > 0) {
+            downloadJson('events.json', evRows);
+          }
+          break;
+        case 'action-clear-filters':
+          setEvQuery('');
+          setAuditQuery('');
+          break;
+        case 'action-toggle-theme':
+          toggleDark();
+          break;
+        case 'action-start-tour':
+          localStorage.removeItem('tourSeen');
+          window.location.reload();
+          break;
+        case 'action-shortcuts':
+          setShortcutsOpen(true);
+          break;
+        case 'action-about':
+          setAboutOpen(true);
+          break;
+      }
+    };
+
+    window.addEventListener('command-palette-action', handleCommandAction as EventListener);
+    return () => window.removeEventListener('command-palette-action', handleCommandAction as EventListener);
+  }, [evRows, auditQ, evQ]);
+
   useEffect(() => {
     refreshAudit();
     // Expose refreshAudit to window for forecast card to use
@@ -529,8 +581,29 @@ export default function DashboardPage() {
   }
 
   return (
-    <main id="main" className={`container mx-auto px-4 py-6 ${layoutPref === "compact" ? "text-xs space-y-2" : "text-sm space-y-4"}`}>
-      <StatusBar eventCount={(evRows || []).length} />
+    <main id="main" className={`container mx-auto px-4 py-6 ${layoutPref === "grid" ? "grid grid-cols-1 lg:grid-cols-2 gap-4" : "space-y-4"}`}>
+      <DemoTour />
+      <div className="flex items-center justify-between mb-4">
+        <StatusBar eventCount={(evRows || []).length} />
+        <NotificationBell />
+      </div>
+      
+      {/* KPI Mini-Widgets */}
+      {(() => {
+        const { effectiveRole } = useRole();
+        const kpis = getKpisForRole(effectiveRole as any);
+        
+        if (kpis.length === 0) return null;
+        
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+            {kpis.map((kpi) => (
+              <KpiMini key={kpi.metricId} kpi={kpi} />
+            ))}
+          </div>
+        );
+      })()}
+      
       {/* Dev Notifications Banner */}
       {lastEvent && (
         <div className="rounded bg-indigo-600 text-white px-3 py-2 text-sm shadow">
@@ -552,6 +625,16 @@ export default function DashboardPage() {
             <Button onClick={toggleDark} variant="outline">Toggle Dark Mode</Button>
             <Button variant="outline" onClick={() => setSettingsOpen(true)}>Settings</Button>
             <Button variant="outline" onClick={() => setAboutOpen(true)}>About</Button>
+            <Button variant="outline" onClick={() => { localStorage.removeItem("tourSeen"); location.reload(); }}>
+              Start Tour
+            </Button>
+            <Button variant="outline" onClick={() => setShortcutsOpen(true)}>Shortcuts</Button>
+            <Button variant="outline" onClick={() => window.open('/docs', '_blank')}>Docs</Button>
+            <Tooltip label="Search commands (⌘K)">
+              <Button variant="outline" onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}>
+                Search
+              </Button>
+            </Tooltip>
             <Button variant="outline" onClick={() => window.print()}>Print</Button>
             <Button variant="outline" onClick={shareSnapshot}>Share Snapshot</Button>
             <Button variant="outline" onClick={() => setResetOpen(true)}>Reset Dashboard</Button>
@@ -576,9 +659,9 @@ export default function DashboardPage() {
             </Button>
             <select className="border rounded px-2 py-1 text-xs"
                     value={layoutPref}
-                    onChange={(e)=>setLayoutPref(e.target.value)}>
-              <option value="roomy">Roomy layout</option>
-              <option value="compact">Compact layout</option>
+                    onChange={(e)=>setLayoutPref(e.target.value as "grid" | "stack")}>
+              <option value="stack">Stack layout</option>
+              <option value="grid">Grid layout</option>
             </select>
           </Toolbar>
           <label className="text-xs flex items-center gap-1">
@@ -742,103 +825,81 @@ export default function DashboardPage() {
 
       {/* Events Monitor */}
       <Card>
-        <CardHeader>
-          <CardTitle>Events (Dev Monitor)</CardTitle>
-          <div className="flex items-center gap-2">
-            <Tooltip label="Search through events by name, timestamp, or payload content">
-              <input
-                className="border rounded px-2 py-1 text-sm w-48"
-                placeholder="Filter events…"
-                value={evQuery}
-                onChange={(e)=>setEvQuery(e.target.value)}
-                aria-label="Filter events"
-              />
-            </Tooltip>
-            <Tooltip label="Download filtered events as JSON file">
-              <Button variant="outline" onClick={() => downloadJson(`events-${safeId()}.json`, evRows.filter(e => {
-                const text = JSON.stringify(e).toLowerCase();
-                return text.includes(evQ.toLowerCase());
-              }))}>Export JSON</Button>
-            </Tooltip>
-            <Button variant="outline" onClick={() => downloadCsv(`events-${safeId()}.csv`, evSlice)}>Export CSV</Button>
-            <Button onClick={loadEvents} disabled={evBusy} className="text-sm" aria-label="Refresh events monitor">
-              {evBusy ? "Refreshing…" : "Refresh"}
-            </Button>
-            <label className="text-xs flex items-center gap-1">
-              <input type="checkbox" checked={autoScrollEvents} onChange={(e)=>setAutoScrollEvents(e.target.checked)} />
-              Auto-scroll
-            </label>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Payload width</span>
-              <select
-                className="border rounded px-2 py-1 text-xs"
-                value={payloadW}
-                onChange={(e)=>setPayloadW(e.target.value)}
-                aria-label="Payload column width"
-              >
-                <option value="30%">30%</option>
-                <option value="50%">50%</option>
-                <option value="70%">70%</option>
-              </select>
-            </div>
-          </div>
-        </CardHeader>
         <CardContent>
-          {evError ? (
-            <div className="rounded border px-3 py-2 bg-red-50 border-red-200 text-red-800">
-              {evError}
+          <DataTable
+            title="Events (Dev Monitor)"
+            data={evSlice}
+            columns={[
+              {
+                key: "ts",
+                label: "Time",
+                render: (value: any, row: any) => {
+                  const tsCell = useRelative ? useRelativeTime(row.ts ?? null) : (typeof row.ts === "number" ? new Date(row.ts).toISOString() : (row.ts || ""));
+                  return tsCell;
+                }
+              },
+              {
+                key: "name",
+                label: "Event"
+              },
+              {
+                key: "payload",
+                label: "Payload",
+                render: (value: any) => <CollapsibleJson obj={value ?? {}} />
+              }
+            ]}
+            onRefresh={loadEvents}
+            onClearFilters={() => setEvQuery("")}
+            loading={evBusy}
+            error={evError}
+          >
+            {/* Additional controls */}
+            <div className="flex items-center gap-2 mb-4">
+              <Tooltip label="Search through events by name, timestamp, or payload content">
+                <input
+                  className="border rounded px-2 py-1 text-sm w-48"
+                  placeholder="Filter events…"
+                  value={evQuery}
+                  onChange={(e)=>setEvQuery(e.target.value)}
+                  aria-label="Filter events"
+                />
+              </Tooltip>
+              <label className="text-xs flex items-center gap-1">
+                <input type="checkbox" checked={autoScrollEvents} onChange={(e)=>setAutoScrollEvents(e.target.checked)} />
+                Auto-scroll
+              </label>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Payload width</span>
+                <select
+                  className="border rounded px-2 py-1 text-xs"
+                  value={payloadW}
+                  onChange={(e)=>setPayloadW(e.target.value)}
+                  aria-label="Payload column width"
+                >
+                  <option value="30%">30%</option>
+                  <option value="50%">50%</option>
+                  <option value="70%">70%</option>
+                </select>
+              </div>
             </div>
-          ) : evBusy ? (
-            <div className="space-y-2">
-              <Skeleton className="h-5" />
-              <Skeleton className="h-5" />
-              <Skeleton className="h-5" />
+            
+            {/* Pagination */}
+            <div className="flex items-center gap-2 mt-2 text-xs">
+              <span>{Math.min(evSlice.length, evPageSize)} / {evTotal}</span>
+              <select className="border rounded px-2 py-1"
+                      value={evPageSize} onChange={(e)=>{ setEvPageSize(Number(e.target.value)); setEvPage(0); }}>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <Button variant="outline" onClick={()=>setEvPage(0)}      disabled={evPage===0}>« First</Button>
+              <Button variant="outline" onClick={()=>setEvPage(p=>Math.max(0,p-1))} disabled={evPage===0}>‹ Prev</Button>
+              <span>Page {evPage+1} / {Math.max(1, Math.ceil(evTotal/evPageSize))}</span>
+              <Button variant="outline" onClick={()=>setEvPage(p=>Math.min(p+1, Math.max(0, Math.ceil(evTotal/evPageSize)-1)))} disabled={(evPage+1)>=Math.ceil(evTotal/evPageSize)}>Next ›</Button>
+              <Button variant="outline" onClick={()=>setEvPage(Math.max(0, Math.ceil(evTotal/evPageSize)-1))} disabled={(evPage+1)>=Math.ceil(evTotal/evPageSize)}>Last »</Button>
             </div>
-          ) : evRows.length === 0 ? (
-            <div className="rounded border px-3 py-2 empty-state">No events captured. Perform an action to see live events.</div>
-          ) : (
-            <div ref={evScrollRef} className="table-scroll overflow-x-auto">
-              <table className="min-w-full text-sm table-compact table-fixed">
-                <thead>
-                  <tr className="text-left border-b">
-                    <th className="py-2 pr-3">Time</th>
-                    <th className="py-2 pr-3">Event</th>
-                    <th className="py-2 pr-3" style={{ width: "var(--payload-col-w)" }}>Payload</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {evSlice.map((e, i) => {
-                    const tsCell = useRelative ? useRelativeTime(e.ts ?? null) : (typeof e.ts === "number" ? new Date(e.ts).toISOString() : (e.ts || ""));
-                    return (
-                    <tr key={i} className="border-b align-top">
-                      <td className="py-2 pr-3">{tsCell}</td>
-                      <td className="py-2 pr-3">{e.name}</td>
-                      <td className="py-2 pr-3 align-top" style={{ width: "var(--payload-col-w)" }}>
-                        <CollapsibleJson obj={e.payload ?? {}} />
-                      </td>
-                    </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-          {/* Events pagination bar */}
-          <div className="flex items-center gap-2 mt-2 text-xs">
-            <span>{Math.min(evSlice.length, evPageSize)} / {evTotal}</span>
-            <select className="border rounded px-2 py-1"
-                    value={evPageSize} onChange={(e)=>{ setEvPageSize(Number(e.target.value)); setEvPage(0); }}>
-              <option value={10}>10</option>
-              <option value={20}>20</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-            <Button variant="outline" onClick={()=>setEvPage(0)}      disabled={evPage===0}>« First</Button>
-            <Button variant="outline" onClick={()=>setEvPage(p=>Math.max(0,p-1))} disabled={evPage===0}>‹ Prev</Button>
-            <span>Page {evPage+1} / {Math.max(1, Math.ceil(evTotal/evPageSize))}</span>
-            <Button variant="outline" onClick={()=>setEvPage(p=>Math.min(p+1, Math.max(0, Math.ceil(evTotal/evPageSize)-1)))} disabled={(evPage+1)>=Math.ceil(evTotal/evPageSize)}>Next ›</Button>
-            <Button variant="outline" onClick={()=>setEvPage(Math.max(0, Math.ceil(evTotal/evPageSize)-1))} disabled={(evPage+1)>=Math.ceil(evTotal/evPageSize)}>Last »</Button>
-          </div>
+          </DataTable>
         </CardContent>
       </Card>
 
@@ -905,123 +966,90 @@ export default function DashboardPage() {
 
       {/* Recent Audit */}
       <Card>
-        <CardHeader>
-          <CardTitle>Recent Audit</CardTitle>
-          <div className="flex items-center gap-2">
-            <Tooltip label="Search through audit entries by actor, role, action, or payload content">
-              <input
-                className="border rounded px-2 py-1 text-sm w-56"
-                placeholder="Filter audit…"
-                value={auditQuery}
-                onChange={(e)=>setAuditQuery(e.target.value)}
-                aria-label="Filter audit"
-              />
-            </Tooltip>
-            <Tooltip label="Download filtered audit entries as JSON file">
-              <Button variant="outline" onClick={() => downloadJson(`audit-${safeId()}.json`, auditRows.filter(e => {
-                const text = JSON.stringify(e).toLowerCase();
-                return text.includes(auditQ.toLowerCase());
-              }))}>Export JSON</Button>
-            </Tooltip>
-            <Button variant="outline" onClick={() => downloadCsv(`audit-${safeId()}.csv`, auSlice)}>Export CSV</Button>
-            <Button
-              onClick={refreshAudit}
-              disabled={loadingAudit}
-              className="text-sm"
-              aria-label="Refresh audit data"
-            >
-              {loadingAudit ? "Refreshing…" : "Refresh"}
-            </Button>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">Payload width</span>
-              <select
-                className="border rounded px-2 py-1 text-xs"
-                value={payloadW}
-                onChange={(e)=>setPayloadW(e.target.value)}
-                aria-label="Payload column width"
-              >
-                <option value="30%">30%</option>
-                <option value="50%">50%</option>
-                <option value="70%">70%</option>
-              </select>
-            </div>
-          </div>
-        </CardHeader>
         <CardContent>
-
-          {loadingAudit ? (
-            <div className="space-y-2">
-              <Skeleton className="h-5" />
-              <Skeleton className="h-5" />
-              <Skeleton className="h-5" />
+          <DataTable
+            title="Recent Audit"
+            data={auSlice}
+            columns={[
+              {
+                key: "ts",
+                label: "Time",
+                render: (value: any, row: any) => {
+                  const tsCell = useRelative ? useRelativeTime(row.ts ?? null) : (typeof row.ts === "number" ? new Date(row.ts).toISOString() : (row.ts || ""));
+                  return tsCell;
+                }
+              },
+              {
+                key: "actor",
+                label: "Actor"
+              },
+              {
+                key: "actorRole",
+                label: "Role"
+              },
+              {
+                key: "action",
+                label: "Action"
+              },
+              {
+                key: "payload",
+                label: "Payload",
+                render: (value: any) => <CollapsibleJson obj={value ?? {}} />
+              }
+            ]}
+            onRefresh={refreshAudit}
+            onClearFilters={() => setAuditQuery("")}
+            loading={loadingAudit}
+            error={auditError}
+          >
+            {/* Additional controls */}
+            <div className="flex items-center gap-2 mb-4">
+              <Tooltip label="Search through audit entries by actor, role, action, or payload content">
+                <input
+                  className="border rounded px-2 py-1 text-sm w-56"
+                  placeholder="Filter audit…"
+                  value={auditQuery}
+                  onChange={(e)=>setAuditQuery(e.target.value)}
+                  aria-label="Filter audit"
+                />
+              </Tooltip>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-500">Payload width</span>
+                <select
+                  className="border rounded px-2 py-1 text-xs"
+                  value={payloadW}
+                  onChange={(e)=>setPayloadW(e.target.value)}
+                  aria-label="Payload column width"
+                >
+                  <option value="30%">30%</option>
+                  <option value="50%">50%</option>
+                  <option value="70%">70%</option>
+                </select>
+              </div>
             </div>
-          ) : (
-            <>
-              {auditError && (
-                <div className="rounded border px-3 py-2 bg-yellow-50 border-yellow-200 text-yellow-800">
-                  {auditError}
-                </div>
-              )}
-
-              {!auditError && auditRows.length === 0 && (
-                <div className="rounded border px-3 py-2 empty-state">
-                  No audit entries yet. Trigger an action above, then refresh.
-                </div>
-              )}
-
-              {auditRows.length > 0 && (
-            <div className="table-scroll overflow-x-auto">
-              <table className="min-w-full text-sm table-compact table-fixed">
-                <thead>
-                  <tr className="text-left border-b">
-                    <th className="py-2 pr-3">Time</th>
-                    <th className="py-2 pr-3">Actor</th>
-                    <th className="py-2 pr-3">Role</th>
-                    <th className="py-2 pr-3">Action</th>
-                    <th className="py-2 pr-3" style={{ width: "var(--payload-col-w)" }}>Payload</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {auSlice.map((e, i) => {
-                    const tsCell = useRelative ? useRelativeTime(e.ts ?? null) : (typeof e.ts === "number" ? new Date(e.ts).toISOString() : (e.ts || ""));
-                    return (
-                    <tr key={e.id ?? i} className="border-b align-top">
-                      <td className="py-2 pr-3">
-                        {tsCell}
-                      </td>
-                      <td className="py-2 pr-3">{String(e.actor ?? "")}</td>
-                      <td className="py-2 pr-3">{String((e as any).actorRole ?? "")}</td>
-                      <td className="py-2 pr-3">{String(e.action ?? "")}</td>
-                      <td className="py-2 pr-3 align-top" style={{ width: "var(--payload-col-w)" }}>
-                        <CollapsibleJson obj={e.payload ?? {}} />
-                      </td>
-                    </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-        </div>
-              )}
-            </>
-          )}
-          {/* Audit pagination bar */}
-          <div className="flex items-center gap-2 mt-2 text-xs">
-            <span>{Math.min(auSlice.length, auPageSize)} / {auTotal}</span>
-            <select className="border rounded px-2 py-1"
-                    value={auPageSize} onChange={(e)=>{ setAuPageSize(Number(e.target.value)); setAuPage(0); }}>
-              <option value={10}>10</option>
-              <option value={25}>25</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-            </select>
-            <Button variant="outline" onClick={()=>setAuPage(0)}      disabled={auPage===0}>« First</Button>
-            <Button variant="outline" onClick={()=>setAuPage(p=>Math.max(0,p-1))} disabled={auPage===0}>‹ Prev</Button>
-            <span>Page {auPage+1} / {Math.max(1, Math.ceil(auTotal/auPageSize))}</span>
-            <Button variant="outline" onClick={()=>setAuPage(p=>Math.min(p+1, Math.max(0, Math.ceil(auTotal/auPageSize)-1)))} disabled={(auPage+1)>=Math.ceil(auTotal/auPageSize)}>Next ›</Button>
-            <Button variant="outline" onClick={()=>setAuPage(Math.max(0, Math.ceil(auTotal/auPageSize)-1))} disabled={(auPage+1)>=Math.ceil(auTotal/auPageSize)}>Last »</Button>
-          </div>
+            
+            {/* Pagination */}
+            <div className="flex items-center gap-2 mt-2 text-xs">
+              <span>{Math.min(auSlice.length, auPageSize)} / {auTotal}</span>
+              <select className="border rounded px-2 py-1"
+                      value={auPageSize} onChange={(e)=>{ setAuPageSize(Number(e.target.value)); setAuPage(0); }}>
+                <option value={10}>10</option>
+                <option value={25}>25</option>
+                <option value={50}>50</option>
+                <option value={100}>100</option>
+              </select>
+              <Button variant="outline" onClick={()=>setAuPage(0)}      disabled={auPage===0}>« First</Button>
+              <Button variant="outline" onClick={()=>setAuPage(p=>Math.max(0,p-1))} disabled={auPage===0}>‹ Prev</Button>
+              <span>Page {auPage+1} / {Math.max(1, Math.ceil(auTotal/auPageSize))}</span>
+              <Button variant="outline" onClick={()=>setAuPage(p=>Math.min(p+1, Math.max(0, Math.ceil(auTotal/auPageSize)-1)))} disabled={(auPage+1)>=Math.ceil(auTotal/auPageSize)}>Next ›</Button>
+              <Button variant="outline" onClick={()=>setAuPage(Math.max(0, Math.ceil(auTotal/auPageSize)-1))} disabled={(auPage+1)>=Math.ceil(auTotal/auPageSize)}>Last »</Button>
+            </div>
+          </DataTable>
         </CardContent>
       </Card>
+
+      {/* Acceptance Test Panel - Development Only */}
+      <AcceptancePanel />
 
       {/* Keyboard Shortcuts Help */}
       <div className="text-xs text-gray-500">
@@ -1054,6 +1082,9 @@ export default function DashboardPage() {
 
       {/* About Modal */}
       <AboutModal open={aboutOpen} onClose={() => setAboutOpen(false)} />
+
+      {/* Shortcuts Modal */}
+      <ShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
 
       {/* Confirm Dialog */}
       <ConfirmDialog
@@ -1097,6 +1128,9 @@ export default function DashboardPage() {
         onCancel={() => setResetOpen(false)}
         onConfirm={() => { setResetOpen(false); softReset(); }}
       />
+      
+      {/* Toast Notifications */}
+      <ToastHost />
       </main>
   );
 }

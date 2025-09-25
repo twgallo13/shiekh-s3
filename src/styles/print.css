@@ -1,0 +1,878 @@
+/**
+ * Print Styles for Audit and Compliance Views
+ * Optimized for clean, professional printing
+ */
+
+/* Hide navigation and non-essential elements when printing */
+@media print {
+  /* Hide navigation, toolbars, and interactive elements */
+  nav,
+  .navigation,
+  .toolbar,
+  .toolbar-cluster,
+  .status-bar,
+  .command-palette,
+  .modal,
+  .modal-overlay,
+  .dropdown,
+  .dropdown-menu,
+  .tooltip,
+  .acceptance-panel,
+  .dev-notifications,
+  .role-sim-switcher,
+  .theme-toggle,
+  .print-button,
+  .export-button,
+  .filter-controls,
+  .pagination,
+  .tab-navigation,
+  .tab-buttons,
+  button:not(.print-only),
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure print-friendly layout */
+  .print-page {
+    margin: 0;
+    padding: 0.5in;
+    background: white;
+    color: black;
+    font-size: 12pt;
+    line-height: 1.4;
+  }
+
+  /* Print header styling */
+  .print-header {
+    page-break-inside: avoid;
+    margin-bottom: 1em;
+  }
+
+  .print-header h1 {
+    font-size: 18pt;
+    font-weight: bold;
+    margin: 0 0 0.5em 0;
+    color: black;
+  }
+
+  .print-header p {
+    font-size: 10pt;
+    margin: 0;
+    color: #666;
+  }
+
+  /* Print filters styling */
+  .print-filters {
+    page-break-inside: avoid;
+    background: #f5f5f5 !important;
+    border: 1pt solid #ccc !important;
+    padding: 0.5em;
+    margin-bottom: 1em;
+  }
+
+  .print-filters h2 {
+    font-size: 14pt;
+    font-weight: bold;
+    margin: 0 0 0.5em 0;
+    color: black;
+  }
+
+  .print-filters .grid {
+    display: block;
+  }
+
+  .print-filters .grid > div {
+    display: inline-block;
+    margin-right: 1em;
+    margin-bottom: 0.25em;
+  }
+
+  /* Print table styling */
+  .print-table {
+    page-break-inside: auto;
+  }
+
+  .print-table h2 {
+    font-size: 16pt;
+    font-weight: bold;
+    margin: 0 0 0.5em 0;
+    color: black;
+  }
+
+  .print-table table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1pt solid #000;
+    font-size: 10pt;
+    margin-bottom: 1em;
+  }
+
+  .print-table th {
+    background: #f0f0f0 !important;
+    border: 1pt solid #000;
+    padding: 0.25em 0.5em;
+    font-weight: bold;
+    text-align: left;
+    color: black;
+  }
+
+  .print-table td {
+    border: 1pt solid #000;
+    padding: 0.25em 0.5em;
+    color: black;
+    vertical-align: top;
+  }
+
+  .print-table tr:nth-child(even) {
+    background: #f9f9f9 !important;
+  }
+
+  /* Print footer styling */
+  .print-footer {
+    page-break-inside: avoid;
+    margin-top: 1em;
+    padding-top: 0.5em;
+    border-top: 1pt solid #ccc;
+  }
+
+  .print-footer p {
+    margin: 0.25em 0;
+    font-size: 9pt;
+    color: #666;
+  }
+
+  .print-footer .text-center {
+    text-align: center;
+    margin-top: 0.5em;
+    font-size: 8pt;
+    color: #999;
+  }
+
+  /* Enhanced page break utilities */
+  .page-break-before,
+  .break-before {
+    page-break-before: always;
+  }
+
+  .page-break-after,
+  .break-after {
+    page-break-after: always;
+  }
+
+  .page-break-inside-avoid,
+  .avoid-break,
+  .break-inside-avoid {
+    page-break-inside: avoid;
+  }
+
+  /* Specific break controls */
+  .break-before-page {
+    page-break-before: page;
+  }
+
+  .break-after-page {
+    page-break-after: page;
+  }
+
+  .break-before-column {
+    page-break-before: column;
+  }
+
+  .break-after-column {
+    page-break-after: column;
+  }
+
+  /* Table-specific break controls */
+  .print-table {
+    page-break-inside: auto;
+  }
+
+  .print-table thead {
+    display: table-header-group;
+  }
+
+  .print-table tbody {
+    display: table-row-group;
+  }
+
+  .print-table tfoot {
+    display: table-footer-group;
+  }
+
+  .print-table tr {
+    page-break-inside: avoid;
+  }
+
+  .print-table td,
+  .print-table th {
+    page-break-inside: avoid;
+  }
+
+  /* Table pagination for large tables */
+  .print-table tbody tr {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure tables don't break awkwardly */
+  .print-table table {
+    page-break-inside: auto;
+  }
+
+  .print-table thead {
+    display: table-header-group;
+  }
+
+  .print-table tfoot {
+    display: table-footer-group;
+  }
+
+  /* Hide scrollbars and ensure content fits */
+  * {
+    overflow: visible !important;
+  }
+
+  /* Ensure proper margins and page setup */
+  @page {
+    margin: 0.5in;
+    size: letter;
+    
+    /* Running headers and footers */
+    @top-center {
+      content: "Shiekh Supply S3 Report";
+      font-size: 10pt;
+      color: #666;
+    }
+    
+    @bottom-center {
+      content: "Page " counter(page) " of " counter(pages);
+      font-size: 10pt;
+      color: #666;
+    }
+    
+    @bottom-left {
+      content: "Build: " attr(data-build);
+      font-size: 8pt;
+      color: #999;
+    }
+    
+    @bottom-right {
+      content: "Contact: support@shiekhsupply.com";
+      font-size: 8pt;
+      color: #999;
+    }
+  }
+
+  /* Hide any remaining interactive elements */
+  input,
+  select,
+  textarea,
+  .interactive,
+  .clickable {
+    border: 1pt solid #000 !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Ensure badges and status indicators are visible */
+  .badge,
+  .status-badge,
+  .role-badge {
+    border: 1pt solid #000 !important;
+    background: white !important;
+    color: black !important;
+    padding: 0.1em 0.3em;
+    font-size: 9pt;
+  }
+
+  /* Ensure proper font rendering */
+  body,
+  .print-page {
+    font-family: "Times New Roman", Times, serif !important;
+    font-size: 12pt !important;
+    line-height: 1.4 !important;
+  }
+
+  /* Ensure proper spacing */
+  h1, h2, h3, h4, h5, h6 {
+    margin-top: 0.5em;
+    margin-bottom: 0.25em;
+  }
+
+  p {
+    margin: 0.25em 0;
+  }
+
+  /* Ensure proper table cell content */
+  .print-table td {
+    word-wrap: break-word;
+    max-width: 2in;
+  }
+
+  /* Special handling for long content */
+  .print-table td:last-child {
+    max-width: 3in;
+  }
+
+  /* Ensure proper alignment */
+  .text-center {
+    text-align: center;
+  }
+
+  .text-right {
+    text-align: right;
+  }
+
+  .text-left {
+    text-align: left;
+  }
+
+  /* Hide any remaining UI elements */
+  .sidebar,
+  .sidebar-nav,
+  .main-nav,
+  .header-nav,
+  .footer,
+  .footer-nav,
+  .breadcrumb,
+  .breadcrumbs,
+  .search-box,
+  .search-input,
+  .notification,
+  .alert,
+  .toast,
+  .popup,
+  .overlay {
+    display: none !important;
+  }
+
+  /* Ensure proper page layout */
+  .container {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .max-w-7xl,
+  .max-w-4xl,
+  .max-w-6xl {
+    max-width: none !important;
+  }
+
+  /* Ensure proper spacing for print */
+  .space-y-4 > * + * {
+    margin-top: 0.5em !important;
+  }
+
+  .space-y-6 > * + * {
+    margin-top: 0.75em !important;
+  }
+
+  .mb-4 {
+    margin-bottom: 0.5em !important;
+  }
+
+  .mb-6 {
+    margin-bottom: 0.75em !important;
+  }
+
+  .mt-4 {
+    margin-top: 0.5em !important;
+  }
+
+  .mt-6 {
+    margin-top: 0.75em !important;
+  }
+
+  .mt-8 {
+    margin-top: 1em !important;
+  }
+
+  /* Ensure proper padding for print */
+  .p-4 {
+    padding: 0.5em !important;
+  }
+
+  .p-6 {
+    padding: 0.75em !important;
+  }
+
+  .p-8 {
+    padding: 1em !important;
+  }
+
+  .px-4 {
+    padding-left: 0.5em !important;
+    padding-right: 0.5em !important;
+  }
+
+  .py-4 {
+    padding-top: 0.5em !important;
+    padding-bottom: 0.5em !important;
+  }
+
+  .py-6 {
+    padding-top: 0.75em !important;
+    padding-bottom: 0.75em !important;
+  }
+
+  .py-8 {
+    padding-top: 1em !important;
+    padding-bottom: 1em !important;
+  }
+
+  /* Print Frame Component Styles */
+  .print-frame {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .print-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: white;
+    border-bottom: 1pt solid #000;
+    z-index: 1000;
+  }
+
+  .print-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0 15px;
+  }
+
+  .print-logo-text {
+    font-size: 16pt;
+    font-weight: bold;
+    color: black;
+  }
+
+  .print-logo-subtitle {
+    font-size: 10pt;
+    color: #666;
+  }
+
+  .print-title {
+    font-size: 14pt;
+    font-weight: 600;
+    color: black;
+  }
+
+  .print-subtitle {
+    font-size: 12pt;
+    color: #666;
+  }
+
+  .print-timestamp {
+    font-size: 10pt;
+    color: #666;
+  }
+
+  .print-content {
+    margin-top: 60px;
+    margin-bottom: 40px;
+    padding: 15px;
+  }
+
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    background: white;
+    border-top: 1pt solid #000;
+  }
+
+  .print-footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 100%;
+    padding: 0 15px;
+    font-size: 10pt;
+    color: #666;
+  }
+
+  /* Provenance Component Styles */
+  .provenance-block {
+    background: white;
+    border: 1pt solid #000;
+    page-break-inside: avoid;
+    margin: 10px 0;
+    padding: 10px;
+  }
+
+  .provenance-header {
+    border-bottom: 1pt solid #000;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+  }
+
+  .provenance-title {
+    font-size: 12pt;
+    font-weight: 600;
+    color: black;
+    margin: 0;
+  }
+
+  .provenance-qr-image {
+    width: 30px;
+    height: 30px;
+    border: 1pt solid #000;
+  }
+
+  .provenance-content {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 10px;
+  }
+
+  .provenance-label {
+    font-size: 10pt;
+    font-weight: 500;
+    color: black;
+    min-width: 60px;
+  }
+
+  .provenance-value {
+    font-size: 10pt;
+    color: #666;
+    word-break: break-all;
+  }
+
+  .provenance-correlation,
+  .provenance-hash {
+    font-family: monospace;
+    font-size: 9pt;
+    padding: 1px 3px;
+    background: #f0f0f0;
+    border: 1pt solid #ccc;
+  }
+
+  /* Signatures Section */
+  .signatures-section {
+    page-break-inside: avoid;
+    margin-top: 1em;
+    padding-top: 0.5em;
+    border-top: 1pt solid #000;
+  }
+
+  .signatures-section h3 {
+    font-size: 14pt;
+    font-weight: 600;
+    color: black;
+    margin: 0 0 0.5em 0;
+  }
+
+  .signature-block {
+    text-align: center;
+  }
+
+  .signature-block .border-b {
+    border-bottom: 1pt solid #000;
+    padding-bottom: 2px;
+    margin-bottom: 4px;
+  }
+
+  .signature-block .h-12 {
+    height: 48px;
+    border-bottom: 1pt solid #000;
+  }
+
+  .signature-block .text-xs {
+    font-size: 8pt;
+    color: #666;
+    margin-top: 2px;
+  }
+
+  /* Summary Statistics */
+  .summary-stats {
+    page-break-inside: avoid;
+    background: #f0f8ff !important;
+    border: 1pt solid #000 !important;
+    padding: 0.5em;
+    margin: 0.5em 0;
+  }
+
+  .summary-stats h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    color: black;
+    margin: 0 0 0.25em 0;
+  }
+
+  .summary-stats .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5em;
+  }
+
+  .summary-stats .font-medium {
+    font-weight: 500;
+  }
+
+  /* Important Notes */
+  .important-notes {
+    page-break-inside: avoid;
+    background: #fffacd !important;
+    border: 1pt solid #000 !important;
+    padding: 0.5em;
+    margin: 0.5em 0;
+  }
+
+  .important-notes h4 {
+    font-size: 10pt;
+    font-weight: 600;
+    color: black;
+    margin: 0 0 0.25em 0;
+  }
+
+  .important-notes .text-xs {
+    font-size: 8pt;
+    color: #666;
+    margin: 0.125em 0;
+  }
+
+  /* Enhanced table styling for print */
+  .print-table table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 1pt solid #000;
+    font-size: 10pt;
+    margin-bottom: 1em;
+  }
+
+  .print-table th {
+    background: #f0f0f0 !important;
+    border: 1pt solid #000;
+    padding: 0.25em 0.5em;
+    font-weight: bold;
+    text-align: left;
+    color: black;
+    page-break-inside: avoid;
+  }
+
+  .print-table td {
+    border: 1pt solid #000;
+    padding: 0.25em 0.5em;
+    color: black;
+    vertical-align: top;
+    page-break-inside: avoid;
+  }
+
+  .print-table tr:nth-child(even) {
+    background: #f9f9f9 !important;
+  }
+
+  /* Badge styling for print */
+  .print-table .badge,
+  .print-table .status-badge,
+  .print-table .urgency-badge {
+    border: 1pt solid #000 !important;
+    background: white !important;
+    color: black !important;
+    padding: 0.1em 0.3em;
+    font-size: 8pt;
+    border-radius: 2pt;
+  }
+
+  /* Currency formatting */
+  .print-table .text-right {
+    text-align: right;
+  }
+
+  /* Monospace font for IDs and codes */
+  .print-table .font-mono {
+    font-family: monospace;
+    font-size: 9pt;
+  }
+
+  /* Triage Board Print Styles */
+  .triage-board {
+    break-inside: avoid;
+  }
+
+  .triage-column {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin-bottom: 1em;
+  }
+
+  .triage-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    border: 1pt solid #000 !important;
+    background: white !important;
+    color: black !important;
+    margin-bottom: 0.5em;
+    padding: 0.5em;
+    border-radius: 0;
+  }
+
+  .triage-item h4 {
+    font-weight: bold;
+    margin-bottom: 0.25em;
+    color: black !important;
+  }
+
+  .triage-item .badge {
+    border: 1pt solid #000 !important;
+    background: white !important;
+    color: black !important;
+    padding: 0.1em 0.3em;
+    font-size: 8pt;
+    border-radius: 2pt;
+    margin: 0.1em;
+  }
+
+  .triage-item .text-gray-600 {
+    color: #666 !important;
+  }
+
+  .triage-item .text-red-600 {
+    color: #d00 !important;
+    font-weight: bold;
+  }
+
+  .triage-item .text-orange-600 {
+    color: #f60 !important;
+    font-weight: bold;
+  }
+
+  /* Triage Board Grid Layout for Print */
+  .triage-board .grid {
+    display: block !important;
+  }
+
+  .triage-board .grid > div {
+    width: 100% !important;
+    margin-bottom: 1em;
+    break-inside: avoid;
+  }
+
+  /* Triage Board Statistics */
+  .triage-statistics {
+    break-inside: avoid;
+    margin-bottom: 1em;
+    padding: 0.5em;
+    border: 1pt solid #000;
+    background: #f9f9f9;
+  }
+
+  .triage-statistics .grid {
+    display: block !important;
+  }
+
+  .triage-statistics .grid > div {
+    width: 100% !important;
+    margin-bottom: 0.5em;
+    padding: 0.25em;
+    border-bottom: 1pt solid #ccc;
+  }
+
+  /* Triage Board Header */
+  .triage-board h2 {
+    page-break-after: avoid;
+    margin-bottom: 0.5em;
+    color: black !important;
+  }
+
+  .triage-board p {
+    margin-bottom: 1em;
+    color: #666 !important;
+  }
+
+  /* Hide interactive elements in triage board */
+  .triage-board button,
+  .triage-board .cursor-pointer {
+    display: none !important;
+  }
+  
+  /* Hide hover effects in triage board */
+  .triage-board *:hover {
+    box-shadow: none !important;
+  }
+
+  /* Triage item details for print */
+  .triage-item-details {
+    font-size: 10pt;
+    line-height: 1.3;
+  }
+
+  .triage-item-details .font-medium {
+    font-weight: bold;
+  }
+
+  .triage-item-details .text-xs {
+    font-size: 9pt;
+  }
+
+  /* SLA information for print */
+  .triage-item .sla-info {
+    border-top: 1pt solid #ccc;
+    padding-top: 0.25em;
+    margin-top: 0.25em;
+    font-size: 8pt;
+  }
+
+  /* Triage board column headers */
+  .triage-column .card-header {
+    background: #f0f0f0 !important;
+    border-bottom: 2pt solid #000;
+    page-break-after: avoid;
+  }
+
+  .triage-column .card-title {
+    color: black !important;
+    font-weight: bold;
+  }
+
+  /* Print-friendly triage board layout */
+  .print-view .triage-board {
+    font-size: 11pt;
+    line-height: 1.4;
+  }
+
+  .print-view .triage-board .grid {
+    display: block !important;
+  }
+
+  .print-view .triage-board .grid > div {
+    width: 100% !important;
+    margin-bottom: 1.5em;
+    break-inside: avoid;
+  }
+
+  /* Triage board print summary */
+  .triage-print-summary {
+    page-break-after: always;
+    margin-bottom: 1em;
+    padding: 0.5em;
+    border: 2pt solid #000;
+    background: #f9f9f9;
+  }
+
+  .triage-print-summary h3 {
+    margin-bottom: 0.5em;
+    color: black !important;
+    font-weight: bold;
+  }
+
+  .triage-print-summary .summary-grid {
+    display: block !important;
+  }
+
+  .triage-print-summary .summary-grid > div {
+    width: 100% !important;
+    margin-bottom: 0.25em;
+    padding: 0.25em;
+    border-bottom: 1pt solid #ccc;
+  }
+}
